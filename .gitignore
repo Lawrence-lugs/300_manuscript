@@ -29,7 +29,7 @@
 *.pdfsync
 
 ## Build output:
-*.pdf
+# *.pdf
 
 ## Editors:
 .vscode/
