@@ -1,0 +1,9 @@
+\chapter*{Abstract}
+    
+The use of Artificial intelligence (AI) offers great benefits in terms of scalability, application space and viability for extreme edge devices. However, extreme edge devices are constrained to work with extremely low amounts of memory and energy. For this purpose, developments ranging from the emergence of more efficient AI algorithms all the way to the design and fabrication of more efficient application-specific ICs have been emerging in the recent years. 
+
+Analog in-memory computing shows itself as the most area and energy-efficient solution for AI inference in extreme edge devices. However, typical analog in-memory computing (AIMC) architectures require large amounts of energy for writing the weights to the memory cells. Reusing the written weights as much as possible is imperative to achieve high energy efficiency in AIMC. 
+
+Existing works on AIMC acceleration tend to ignore model utilization entirely or target a specific model in an ad-hoc manner. Since AIMC arrays may need to be designed for generality, there is a need to design a utilization mapping and tool flow that can optimize for a set of target models. We take into account a set of models and derive a minimum highest-utilization viable mapping at a specific latency constraint.  
+
+Matrices are typically mapped one-to-one to a memory array, causing very little array utilization when layers with small footprint are mapped. We propose a new AIMC architecture that can achieve high utilization by allowing multiple layers to be mapped to the same AIMC array, a restriction that many DNN compiler works self-impose. We also propose a new mapping algorithm that can achieve high utilization by packing multiple models into the same AIMC array. We show that our proposed architecture and mapping algorithm can achieve high utilization while maintaining low latency and energy consumption.
