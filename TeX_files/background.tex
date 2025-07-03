@@ -1,2 +1,48 @@
 \chapter{Background}
 
+\section{Flattening Convolutional Neural Networks (CNNs)}
+
+Applications where the input data is spatially or temporally related in the short term benefit significantly from convolutional neural network (CNN) models leading to their significant popularity especially in applications such as image/audio processing, anomaly detection and signal classification which all have significant applications for edge devices. CNNs can basically be thought of as bundles of many small MAC operations done on related subsets (typically spatially or temporally related) of the input.
+
+\begin{figure}[htbp]
+    \centering
+    \includesvg[width=0.8\textwidth]{images/background/conv_algorithm.svg}
+    \caption{Convolutional layers. Feature maps are 4D tensors with dimensions $(N,C,H,W)$, and kernels are 4D tensors with dimensions $(K,C,F_X,F_Y)$.}
+    \label{fig:convolution_algorithm}
+\end{figure}
+
+An equivalent way of thinking about convolutions algorithmically is as nested for loops that iterate over the input data and the kernel weights, as in Figure \ref{fig:convolution_algorithm}.
+
+Convolution operations have a kernel that operate on C channels of an input image of size $I_X\times I_Y$, and produce K channels of $O_X\times O_Y$ output images. The kernel has dimensions$(K,C,F_X,F_Y)$ where $K$ is the number of filters in the convolution layer. A convolution computes the output feature map by sliding the kernel over the input image and computing the dot product between the kernel and the corresponding patch of the input image.
+
+\begin{figure}[htbp]
+    \centering
+    \includesvg[width=0.8\textwidth]{images/background/conv_flattening.svg}
+    \caption{Convolutional kernels are equivalent to impractically large sparse matrices, turning the convoution into a matrix-vector multiply. Accelerators more commonly to flatten the kernel into a $(K,CF_XF_Y)$ 2D matrix turning the convolution into a matrix-matrix multiply.}
+    \label{fig:conv_flattening}
+\end{figure}
+
+Convolution operations are equivalent to matrix multiplication with a sparse matrix S with repeating values for each of the filters on the rows of S, as in Figure \ref{fig:conv_flattening}B. To perform the convolution, the ifmap can be flattened into a single vector. The convolution operation can then be expressed as a matrix-vector multiplication between the flattened kernel and the flattened input feature map, as in Figure \ref{fig:conv_flattening}B. 
+
+The better way to map convolutions into matrices is to simply flatten the kernel into an equivalent 2D matrix of dimension $(K,CF_XF_Y)$. Then, windows of the input feature map are flattened into a 2D matrix of dimension $(O_XO_Y,CF_XF_Y)$. With this, the convolution operation can be expressed as a matrix multiplication between the flattened kernel and the flattened input feature map, as in Figure \ref{fig:conv_flattening}C. This is the way that most CNNs are implemented in software and is also the way they are mapped into AIMC accelerators. The field now generally calls the input feature map transformation into the 2D matrix in Figure \ref{fig:conv_flattening}C as the "im2col" transformation.
+
+The im2col transformation is usually utilized by machine learning frameworks to implement convolutions (CMSIS-NN \cite{lai2018cmsis}, Google's TensorFlow \cite{jacob2018quantization}, Microsoft's ONNXRunTime \cite{onnxruntime} ). More importantly, common types of machine learning accelerators such as systolic-array based digital accelerators (e.g., Google's TPU) \cite{jouppi2017datacenter} and analog in-memory computing (AIMC) accelerators (e.g., NeuRRAM) \cite{wanneurram} also utilize this im2col transformation.
+
+\section{Analog In-memory Computing} 
+ 
+As a general operating principle, AIMC accelerators use analog signals as intermediates to perform computations (usually dot-product computations) directly within memory arrays, avoiding the energy and latency costs of frequent data movement between compute and memory units. From a systems perspective, AIMC architectures leverage the physical properties of memory devices—such as resistive RAM (RRAM) crossbars or charge-sharing SRAM (e.g., C3SRAM)—to execute matrix-vector multiplications (MVMs) in the analog domain, which form the backbone of neural network inference.
+
+\begin{figure}[htbp]
+    \centering
+    \includesvg[width=\textwidth]{images/background/aimc_system.svg}
+    \caption{Systems Perspective of AIMC. AIMC computations are noisy computations of MVMs. By adding lumped models of analog noise (thermal noise, read errors, write errors, parasitics) to the MVM computation, we can model the errors introduced by AIMC.}
+    \label{fig:aimc_system}
+\end{figure}
+
+MVM computations using AIMC can be interpreted from a systems perspective as shown in Figure \ref{fig:aimc_system}. In this view, AIMC computations are noisy computations of MVMs. Due to this, Gonugondla et al. proposed to use a compute signal-to-noise ratio (SNR) metric to quantify the quality of AIMC computations \cite{gonugondla2020fundamental}.  
+
+By transforming digital signals into analog signals, AIMC accelerators can utilize physical laws to perform the matrix-vector multiplication. For example, using Kirchoff's current law and Ohm's law, AIMC accelerators can perform MVMs by summing the currents flowing through the resistive memory cells in an RRAM crossbar array. Or, charge-based AIMC accelerators can perform MVMs by accumulating charge in a capacitor array, then redistributing them to perform a sum-average operation.
+
+A 2023 survey by Shanbhag et al. shows that AIMC accelerators achieve ~5x more energy efficiency and ~3x more compute density than digital accelerators \cite{shanbhag2022benchmarking}. The potential of AIMC is highlighted further if you consider that digital accelerators operate at much lower tech nodes (e.g., 5nm) than AIMC accelerators (usually 22nm or 65nm).
+
+However, AIMC accelerators can usually only gain this efficiency when performing matrix-vector multiplications (MVMs) with dense matrices. Hence, AIMCs are only good at operations that can be mapped into dense matrices. Operations like depthwise convolutions \cite{howard2017mobilenets} that are still sparse even under the im2col transformation flattening. 
