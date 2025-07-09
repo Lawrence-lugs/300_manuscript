@@ -39,3 +39,9 @@
 ## System files:
 .DS_Store
 Thumbs.db
+
+## LaTeX svg package intermediate files:
+*.svg.pdf
+*.svg.xbb
+*.svg.gz
+svg-inkscape/

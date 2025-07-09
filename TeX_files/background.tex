@@ -1,8 +1,48 @@
 \chapter{Background}
 
-\section{Flattening Convolutional Neural Networks (CNNs)}
+\label{chapter:background}
 
-Applications where the input data is spatially or temporally related in the short term benefit significantly from convolutional neural network (CNN) models leading to their significant popularity especially in applications such as image/audio processing, anomaly detection and signal classification which all have significant applications for edge devices. CNNs can basically be thought of as bundles of many small MAC operations done on related subsets (typically spatially or temporally related) of the input.
+\section{TinyML}
+\label{section:TinyML}
+
+TinyML is a subfield of machine learning (ML) that focuses on deploying ML models on resource-constrained devices, such as microcontrollers and edge devices. More than anything, edge devices have very little available memory making it challenging to run complex ML models with large numbers of parameters.
+
+% Please add the following required packages to your document preamble:
+% \usepackage{graphicx}
+% Please add the following required packages to your document preamble:
+% \usepackage{graphicx}
+\begin{table}[]
+\label{table:mlperftiny2}
+\caption{MLPerfTiny Baseline Models and Datasets}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{ccccc}
+\hline
+\textbf{Model} & \textbf{Dataset} & \textbf{Input Size} & \textbf{Memory Size} & \textbf{Baseline Accuracy} \\ \hline
+DS-CNN         & Speech Commands & 49x10 & 52.5 KB & 0.894 \\
+MobileNetV1    & VWW Dataset     & 96x96 & 325 KB  & 0.901 \\
+ResNet         & CIFAR10         & 32x32 & 96 KB   & 0.924 \\
+FC-AutoEncoder & ToyADMOS        & 640   & 270 KB  & 0.885
+\end{tabular}%
+}
+\end{table}
+
+\begin{figure}
+    \centering
+    \includesvg[width=0.8\textwidth]{images/background/mlperftiny_models.svg}
+    \caption{MLPerfTiny Baseline Models. (A) ResNet-18, (B) MobileNetV2, (C) DS-CNN, (D) FC-AE.}
+    \label{fig:mlperftiny_models}
+\end{figure}
+
+MLPerfTiny is a benchmarking suite used to evaluate the effectivity of microcontroller and software frameworks for running DNNs on the edge. To this end, MLPerfTiny models \cite{banbury2021mlperf} represent the types of models that are typically used in TinyML applications.  MLPerfTiny \cite{banbury2021mlperf} specifies four tasks suited to low-power ML sensors as shown in Table \ref{table:mlperftiny2}. Figure \ref{fig:mlperftiny_models} shows the model architectures of these baseline models.
+
+As representative of edge inference workloads for ML, we are motivated to efficiently run these models at lower power. We target all 4 of the MLPerfTiny models in the mapper (MARP) and accelerator (QRAcc) we present in this thesis.
+
+We implemented these baseline models then quantized them into INT8. The quantized models achieve accuracies as shown in Table \ref{table:mlperftiny2}. However, the visual wakewords dataset results in massive intermediate feature map sizes (up to 1MB). Hence, for the purposes of this thesis, we changed the target dataset of MobileNetv2 to CIFAR-10 instead.
+
+\section{Flattening Convolutional Neural Networks (CNNs)}
+\label{section:cnn_flattening}
+
+Applications like TinyML's keyword spotting or image classification where the input data is spatially or temporally related benefit significantly from convolutional neural network (CNN) models leading to their significant popularity especially in applications such as image/audio processing, anomaly detection and signal classification which all have significant applications for edge devices. CNNs can basically be thought of as bundles of many small MAC operations done on related subsets (typically spatially or temporally related) of the input.
 
 \begin{figure}[htbp]
     \centering
@@ -11,7 +51,7 @@ Applications where the input data is spatially or temporally related in the shor
     \label{fig:convolution_algorithm}
 \end{figure}
 
-An equivalent way of thinking about convolutions algorithmically is as nested for loops that iterate over the input data and the kernel weights, as in Figure \ref{fig:convolution_algorithm}.
+An way of thinking about convolutions algorithmically is as nested for loops that iterate over the input data and the kernel weights, as in Figure \ref{fig:convolution_algorithm}.
 
 Convolution operations have a kernel that operate on C channels of an input image of size $I_X\times I_Y$, and produce K channels of $O_X\times O_Y$ output images. The kernel has dimensions$(K,C,F_X,F_Y)$ where $K$ is the number of filters in the convolution layer. A convolution computes the output feature map by sliding the kernel over the input image and computing the dot product between the kernel and the corresponding patch of the input image.
 
@@ -22,15 +62,15 @@ Convolution operations have a kernel that operate on C channels of an input imag
     \label{fig:conv_flattening}
 \end{figure}
 
-Convolution operations are equivalent to matrix multiplication with a sparse matrix S with repeating values for each of the filters on the rows of S, as in Figure \ref{fig:conv_flattening}B. To perform the convolution, the ifmap can be flattened into a single vector. The convolution operation can then be expressed as a matrix-vector multiplication between the flattened kernel and the flattened input feature map, as in Figure \ref{fig:conv_flattening}B. 
+Convolution operations are equivalent to matrix-vector multiplication with a sparse matrix S with repeating values for each of the filters on the rows of S, as in Figure \ref{fig:conv_flattening}B. To perform the convolution, the ifmap can be flattened into a single vector. The convolution operation can then be expressed as a matrix-vector multiplication between the flattened kernel and the flattened input feature map, as in Figure \ref{fig:conv_flattening}B. 
 
-The better way to map convolutions into matrices is to simply flatten the kernel into an equivalent 2D matrix of dimension $(K,CF_XF_Y)$. Then, windows of the input feature map are flattened into a 2D matrix of dimension $(O_XO_Y,CF_XF_Y)$. With this, the convolution operation can be expressed as a matrix multiplication between the flattened kernel and the flattened input feature map, as in Figure \ref{fig:conv_flattening}C. This is the way that most CNNs are implemented in software and is also the way they are mapped into AIMC accelerators. The field now generally calls the input feature map transformation into the 2D matrix in Figure \ref{fig:conv_flattening}C as the "im2col" transformation.
+The better way to compute convolutions is to map them into matrix-matrix multiplications. To do this, we simply flatten the kernel into an equivalent 2D matrix of dimension $(K,CF_XF_Y)$. Then, windows of the input feature map are flattened into a 2D matrix of dimension $(O_XO_Y,CF_XF_Y)$. With this, the convolution operation can be expressed as a matrix multiplication between the flattened kernel and the flattened input feature map, as in Figure \ref{fig:conv_flattening}C. This is the way that most CNNs are implemented in software and is also the way they are mapped into AIMC accelerators. The field now generally calls the input feature map transformation into the 2D matrix in Figure \ref{fig:conv_flattening}C as the "im2col" transformation.
 
 The im2col transformation is usually utilized by machine learning frameworks to implement convolutions (CMSIS-NN \cite{lai2018cmsis}, Google's TensorFlow \cite{jacob2018quantization}, Microsoft's ONNXRunTime \cite{onnxruntime} ). More importantly, common types of machine learning accelerators such as systolic-array based digital accelerators (e.g., Google's TPU) \cite{jouppi2017datacenter} and analog in-memory computing (AIMC) accelerators (e.g., NeuRRAM) \cite{wanneurram} also utilize this im2col transformation.
 
 \section{Analog In-memory Computing} 
  
-As a general operating principle, AIMC accelerators use analog signals as intermediates to perform computations (usually dot-product computations) directly within memory arrays, avoiding the energy and latency costs of frequent data movement between compute and memory units. From a systems perspective, AIMC architectures leverage the physical properties of memory devices—such as resistive RAM (RRAM) crossbars or charge-sharing SRAM (e.g., C3SRAM)—to execute matrix-vector multiplications (MVMs) in the analog domain, which form the backbone of neural network inference.
+As a general operating principle, AIMC accelerators use analog signals as intermediates to perform computations (usually dot-product computations) directly within memory arrays, avoiding the energy and latency costs of frequent data movement between compute and memory units. From a systems perspective, AIMC architectures leverage the physical properties of memory devices—such as resistive RAM (RRAM) crossbars or charge-sharing SRAM (e.g., C3SRAM)—to execute matrix-vector multiplications (MVMs) in the analog domain, forming the backbone of neural network inference. As discussed before, because DNNs are compose of MVMs and convolutions can be flattened into MVMs, AIMC accelerators are well-suited for DNN inference. 
 
 \begin{figure}[htbp]
     \centering
@@ -39,10 +79,29 @@ As a general operating principle, AIMC accelerators use analog signals as interm
     \label{fig:aimc_system}
 \end{figure}
 
+By transforming digital signals into analog signals, AIMC accelerators can utilize physical laws to perform the matrix-vector multiplication. For example, using Kirchoff's current law and Ohm's law, AIMC accelerators can perform MVMs by summing the currents flowing through the resistive memory cells in an RRAM crossbar array. Or, charge-based AIMC accelerators can perform MVMs by accumulating charge in a capacitor array, then redistributing them to perform a sum-average operation.
+
 MVM computations using AIMC can be interpreted from a systems perspective as shown in Figure \ref{fig:aimc_system}. In this view, AIMC computations are noisy computations of MVMs. Due to this, Gonugondla et al. proposed to use a compute signal-to-noise ratio (SNR) metric to quantify the quality of AIMC computations \cite{gonugondla2020fundamental}.  
 
-By transforming digital signals into analog signals, AIMC accelerators can utilize physical laws to perform the matrix-vector multiplication. For example, using Kirchoff's current law and Ohm's law, AIMC accelerators can perform MVMs by summing the currents flowing through the resistive memory cells in an RRAM crossbar array. Or, charge-based AIMC accelerators can perform MVMs by accumulating charge in a capacitor array, then redistributing them to perform a sum-average operation.
+% Add discussions of the usual AIMCs? C3SRAM, XNOR-SRAM, NeuRRAM, DIANA's favorite one, etc.
 
 A 2023 survey by Shanbhag et al. shows that AIMC accelerators achieve ~5x more energy efficiency and ~3x more compute density than digital accelerators \cite{shanbhag2022benchmarking}. The potential of AIMC is highlighted further if you consider that digital accelerators operate at much lower tech nodes (e.g., 5nm) than AIMC accelerators (usually 22nm or 65nm).
 
 However, AIMC accelerators can usually only gain this efficiency when performing matrix-vector multiplications (MVMs) with dense matrices. Hence, AIMCs are only good at operations that can be mapped into dense matrices. Operations like depthwise convolutions \cite{howard2017mobilenets} that are still sparse even under the im2col transformation flattening. 
+
+\section{Hybrid Accelerators}
+
+When performing DNN inference on the edge, reducing the main memory footprint of the DNN models are crucial as edge devices typically have extremely limited memory (typically $<1MB$). Hence, parameter-efficient DNNs are typically used to reduce the memory footprint of the DNN models. The field had a breakthrough in 2017 when Mobilenets \cite{howard2017mobilenets,sandler2018mobilenetv2} showed that reducing convolutions to sets of depthwise (DWC) and pointwise (PWC) convolutions allows the creation of parameter-efficient DNNs. As of 2025, most parameter-efficient DNNs employ depthwise convolutions like the Mobilenets family and  neural-architecture search (NAS) models like the Hello Edge \cite{zhang2017hello} and MCUNet \cite{lin2020mcunet}.
+
+\begin{figure}[h]
+    \centering
+    \includesvg[width=0.6\textwidth]{images/qracc/dwc_mapping.svg}
+    \caption{The matrix-matrix multiplication equivalent of depthwise convolutions still map into sparse matrices which is inefficient to map into AIMC. Gray tiles are unused memory cells.}
+    \label{fig:depthwise_sparse_mapping}
+\end{figure}
+
+Supporting these convolutions is difficult on AIMC due to the special sparse nature of the depthwise convolution. In particular, this is because the matrix-matrix multiplication equivalent of depthwise convolutions still results in very sparse matrices that AIMC architectures cannot efficiently map without significantly lowering the utilization, as illustrated in Figure \ref{fig:depthwise_sparse_mapping}.
+
+To solve this problem, Garofalo 2022 \cite{garofalo2022heterogeneous} and DIANA \cite{houshmand2022diana} designed multi-accelerator architectures with both digital accelerators and AIMC accelerators so that the depthwise convolutions can be mapped to more flexible digital processing elements that are not restricted to matrix multiplications but can support DWCs as well. 
+
+Since we want to target edge AI models in this thesis, we also want to support depthwise convolutions. Hence, we also designed a hybrid accelerator we call QRAcc (see Chapter \ref{chap:qracc}) that has both AIMC and digital processing elements. The QRAcc architecture is designed to support depthwise convolutions and other sparse operations while still being able to efficiently perform MVMs on AIMC accelerators.

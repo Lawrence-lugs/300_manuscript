@@ -1,0 +1,11 @@
+\chapter{Problem Statement}
+
+One of the most promising hardware solutions to edge AI is analog in-memory computing (AIMC) \cite{sebastian2020memory}. AIMCs can perform the matrix-vector multiplications (MVMs) that are prevalent in deep neural networks (DNNs) at $>100x$ the energy efficiency of digital accelerators and $>1000x$ the energy efficiency of general-purpose processors \cite{shanbhag2022benchmarking}. The act of putting a matrix into the AIMC memory array is called "mapping" in DNN compilers.
+
+AIMC memory arrays can usually contain more than one matrix for computation at a time. Doing this is optimal as it amortizes the write latency and write energy consumption of the AIMC memory array, which is usually high due to the use of special memory devices like RRAMs or PCMs \cite{meng2024compute}. 
+
+However, as shown in Chapter \ref{chapter:mapping}, DNN mappers all limit themselves to single-mapping schemes for simplicity \cite{mei2021zigzag,symons2024stream,andrulis2024cimloop,lammie2024lionheart,chen2018neurosim}. There are instances of multi-mapping schemes being demonstrated on AIMC, but they are only for the purpose of showing the feasiblity of mapping specific models into the AIMCs and are not DNN mappers but ad-hoc demonstrations of multi-mapping \cite{houshmand2022diana,garofalo2022heterogeneous}. 
+
+In this work, we introduce MARP, a DNN mapper that can optimize the mapping of multiple layers in AIMC accelerators with interlayer weight reuse. We build MARP on the idea of using rectangular bin packing algorithms to pack multiple DNN layers into a single matrix written into the AIMC. Doing this optimizes the utilization of the AIMC architecture.
+
+In order to demonstrate the effectiveness of MARP, we also introduce QRAcc, a heterogenous AIMC accelerator architecture that can support the workloads of modern DNNs designed for the edge (represented by the MLPerfTiny models) at high utilization. We show that MARP can provide optimally high utilization, energy efficiency, and latency on QRAcc for the MLPerfTiny models by solving the rectangular bin packing problem using the different existing heuristic methods.

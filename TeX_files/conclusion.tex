@@ -1,0 +1,18 @@
+\section{Conclusion}
+
+Existing DNN mappers for AIMC accelerators are limited to single-mapping schemes, which significantly wastes the available space in the AIMC memory array. In this work, we introduced MARP, a DNN mapper that can optimize the mapping of multiple layers in AIMC accelerators with interlayer weight reuse. MARP uses rectangular bin packing algorithms to pack multiple DNN layers into a single matrix written into the AIMC, optimizing the utilization of the AIMC architecture.
+
+MARP was able to increase the utilizations of the AIMC memory arrays of the MLPerfTiny models. Compared to the single-mapping schemes of existing DNN mappers, MARP's dense packing was able to increase the AIMC memory utilization by 25.07\% for DS-CNN, 51.84\% for FC-AE, 45.71\% for MobileNetV2, and 64.7\% for ResNet. 
+We also discovered that, by utilizing the online variants of the rectangular bin packing algorithms, MARP can also reduce the number of AIMC memory writes needed in inference. MARP reduced the number of AIMC memory writes in MobileNetV2 by 41.3\%, in DS-CNN by 71.43\%, in FC-AE by 60.0\%, and in ResNet by 81.25\%.
+
+MARP-Dense's ability to reduce the number of bins allows AIMC accelerators with a large number of cores to fully map models like MobileNetV2. For example, NeuRRAM's 48 cores can already fully map the MARP-Dense packing of MobileNetV2 at 34 bins. 
+
+To demonstrate the effectiveness of MARP, we also introduced QRAcc, a charge-redistribution SRAM-based AIMC accelerator for DNNs. QRAcc is a fully integrated AIMC accelerator that can perform both analog and digital computations. It uses SeqAcc as its main analog core and WSAcc as its digital core. QRAcc achieves a peak energy efficiency of 509.3 peak TOPS/W at 6.55 TOPS with its AIMC core, which is comparable to state-of-the-art. With its digital core WSAcc, QRAcc achieves a peak energy efficiency of 81.356 peak TOPS/W at 5.76 GOPS, which is also comparable to state-of-the-art digital accelerators.
+
+We evaluated the integration of MARP with the QRAcc AIMC accelerator, demonstrating the practical benefits of MARP’s mapping strategies on real hardware. By leveraging MARP’s optimized layer packing and interlayer weight reuse, QRAcc achieved significant improvements in memory utilization and computational efficiency across a range of MLPerfTiny models. The results show that MARP-enabled QRAcc not only reduces the number of memory writes and increases array utilization, but also sustains significant gains in energy efficiency (up to 1723.2\% on the MLPerfTiny models) and throughput (up to 57.87\% reduction), validating the effectiveness of MARP’s approach in a state-of-the-art AIMC system.
+
+\section{Future Work}
+
+Due to the success of MARP in optimizing AIMC mappings, we believe that the next step in the evolution of existing DNN mappers is to implement schemes like MARP's rectangular packing that can account for the spatial reuse of memory cells in AIMC accelerators. Paired with their existing memory access optimizations, we believe that SOTA DNN mappers like ZigZag/Stream, TimeLoop/CIMLoop, and LionHeart can achieve even higher AIMC memory utilization and energy efficiencies. 
+
+For QRAcc, we'd like to next analyze its compute SNR performance as co-designed with the ONNX splittings that are necessary to fit the layers in. QRAcc also only supports 1b weights for the purposes of this work. We would like to extend QRAcc to support multibit weights.

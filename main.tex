@@ -2,7 +2,17 @@
 \usepackage[utf8]{inputenc}
 \usepackage{graphicx}
 \usepackage{lipsum}
+\usepackage{svg}
 \usepackage[backend=bibtex,bibstyle=ieee,citestyle=numeric-comp]{biblatex}
+\usepackage{multirow}
+\usepackage{longtable}
+\usepackage{listings}
+\usepackage{booktabs}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{colortbl}
 
 \addbibresource{lafquizon.bib}
 \begin{document}
@@ -18,10 +28,17 @@
 \mainmatter
 \include{./TeX_files/introduction}
 \include{./TeX_files/background}
-\include{./TeX_files/methodology}
+\include{./TeX_files/mapping}
+\include{./TeX_files/problemstatement}
+\include{./TeX_files/marp}
+\include{./TeX_files/qracc}
+\include{./TeX_files/marp_qracc}
+\include{./TeX_files/conclusion}
 
 \backmatter
 \printbibliography
 % bibliography, glossary and index would go here.
+
+\include{./TeX_files/appendix}
 
 \end{document}
