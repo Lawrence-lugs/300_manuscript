@@ -8,6 +8,8 @@ In line with the hybrid accelerator works DIANA \cite{houshmand2022diana} and Ga
 
 Additionally, MARP's rectangular packing schemes (discussed in Chapter \ref{chapter:marp}) for matrix mapping onto AIMCs requires arbitrary X and Y offsets in the mapped matrix in the AIMC memories. To this end, we experimented multiple existing feature loading schemes for AIMC like the ones from the UNPU \cite{lee2018unpu}, NeuRRAM \cite{wanneurram}, and Garofalo 2022 \cite{garofalo2022heterogeneous} and found that none of their schemes allow for arbitrary offsets in the mapped matrix (it is unclear if the controller is able to do so). This creates a need for an AIMC accelerator that can support arbitrary offsets in the mapped matrix.
 
+We first start by describing the architecture of QRAcc. Then, we describe how a processor (and thus, a compiler by extension) may use QRAcc to run a model end-to-end. We then describe the SeqAcc and WSAcc blocks that make up the AIMC and digital cores of QRAcc, respectively. Finally, we fully characterize the power and energy consumptions of QRAcc as a whole. 
+
 \section{QRAcc Architecture}
 
 \begin{figure}[h]
@@ -36,7 +38,7 @@ QRAcc utilizes several blocks to fully implement successive layers of integer-on
     \item The feature loader (FL), a 256B register file with masking functionality and a flexible feature loading technique supporting any kernel shape for convolutions.  
     \item The output processing block aligns the output of SeqAcc for writing into the write queue and performs the rest of the necessary operations (fixed-point multiply, shifts, adds) involved in a QLinearConv.
     \item The write queue stores write the output feature map write requests for the ACTMEM until the ACTMEM is ready. The queue allows SeqAcc to have a different output bandwidth than the activation memory.
-    \item The CSRs allow an external processor to configure the QRAcc system and initiate load, readout, or computation. Details on using the CSRs and configuration registers can be found in Appendix \ref{section:qracc_csrs}.
+    \item The CSRs allow an external processor to configure the QRAcc system and initiate load, readout, or computation. Details on using the CSRs and configuration registers can be found in Appendix \ref{section:appendixqracc_csrs}.
 \end{enumerate}
 
 \subsubsection{Activation Memory}
@@ -63,7 +65,7 @@ Other than this, a QLinearConv entails two lumped biasing steps that need to be 
 
 Finally, the output processing stage saturates the output between $[0,2^n-1]$ where $n$ is the configured number of output bits before passing the output to the write queue.
 
-For exact details on the computation of QLinear operations, refer to the appendix \ref{section:qlinearops}.
+For exact details on the computation of QLinear operations, refer to the appendix \ref{section:appendixqlinearops}.
 
 \begin{figure}[h]
     \centering
@@ -151,7 +153,7 @@ Steps 3-6 are performed for each pixel of the OFMAP ($O_XO_Y$ times). QRAcc pipe
 
 \section{SeqAcc: Charge-redistribution SRAM AIMC Core}
 
-SeqAcc is the core matrix-vector-multiplication (MVM) accelerator which takes in N-bit 256-element vectors and multiplies them with a 256x256 matrix to produce a 256-bit output. Figure \ref{fig:imc_qrAccSchem} shows the overall SeqAcc architecture. We based SeqAcc on significant improvements over Jiang et al.'s C3SRAM \cite{jiang2020c3sram}. C3SRAM uses the charge-redistribution (QR) scheme to implement a 64x256 MVM. For more details on our baseline implementation of C3SRAM's charge redistribution, see Appendix \ref{section:c3sram}.
+SeqAcc is the core matrix-vector-multiplication (MVM) accelerator which takes in N-bit 256-element vectors and multiplies them with a 256x256 matrix to produce a 256-bit output. Figure \ref{fig:imc_qrAccSchem} shows the overall SeqAcc architecture. We based SeqAcc on significant improvements over Jiang et al.'s C3SRAM \cite{jiang2020c3sram}. C3SRAM uses the charge-redistribution (QR) scheme to implement a 64x256 MVM. For more details on our baseline implementation of C3SRAM's charge redistribution, see Appendix \ref{section:appendixseqacc}.
 
 \begin{figure}[h]
     \centering
@@ -246,7 +248,7 @@ Table \ref{tab:imc_seqaccmetricsTable} shows SeqAcc's metrics compared to signif
 }
 \end{table}
 
-More details on the implementation of SeqAcc can be found in Appendix \ref{section:seqacc}.
+More details on the implementation of SeqAcc can be found in Appendix \ref{section:appendixseqacc}.
 
 \subsection{Energy Model}
 
@@ -310,7 +312,7 @@ Area Eff.       & 1.81 TOPS/mm\textasciicircum{}2
 \end{table}
 
 
-\section{QRAcc Results}
+\section{QRAcc Characterization}
 
 \subsection{Overall Power and Area Distribution}
 

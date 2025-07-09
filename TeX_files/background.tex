@@ -33,9 +33,9 @@ FC-AutoEncoder & ToyADMOS        & 640   & 270 KB  & 0.885
     \label{fig:mlperftiny_models}
 \end{figure}
 
-MLPerfTiny is a benchmarking suite used to evaluate the effectivity of microcontroller and software frameworks for running DNNs on the edge. To this end, MLPerfTiny models \cite{banbury2021mlperf} represent the types of models that are typically used in TinyML applications.  MLPerfTiny \cite{banbury2021mlperf} specifies four tasks suited to low-power ML sensors as shown in Table \ref{table:mlperftiny2}. Figure \ref{fig:mlperftiny_models} shows the model architectures of these baseline models.
+MLPerfTiny is a benchmarking suite used to evaluate the effectivity of microcontroller and software frameworks for running DNNs on the edge. To this end, MLPerfTiny models \cite{banbury2021mlperf} represent the types of models that are typically used in TinyML applications.  MLPerfTiny \cite{banbury2021mlperf} specifies four tasks and DNN models suited to low-power ML sensors as shown in Table \ref{table:mlperftiny2}. Figure \ref{fig:mlperftiny_models} shows the model architectures of these effient models.
 
-As representative of edge inference workloads for ML, we are motivated to efficiently run these models at lower power. We target all 4 of the MLPerfTiny models in the mapper (MARP) and accelerator (QRAcc) we present in this thesis.
+As representative of edge inference workloads for ML, we are motivated to efficiently run these models at high power efficiency. We target all 4 of the MLPerfTiny models in the mapper (MARP) and accelerator (QRAcc) we present in this thesis.
 
 We implemented these baseline models then quantized them into INT8. The quantized models achieve accuracies as shown in Table \ref{table:mlperftiny2}. However, the visual wakewords dataset results in massive intermediate feature map sizes (up to 1MB). Hence, for the purposes of this thesis, we changed the target dataset of MobileNetv2 to CIFAR-10 instead.
 
@@ -69,6 +69,7 @@ The better way to compute convolutions is to map them into matrix-matrix multipl
 The im2col transformation is usually utilized by machine learning frameworks to implement convolutions (CMSIS-NN \cite{lai2018cmsis}, Google's TensorFlow \cite{jacob2018quantization}, Microsoft's ONNXRunTime \cite{onnxruntime} ). More importantly, common types of machine learning accelerators such as systolic-array based digital accelerators (e.g., Google's TPU) \cite{jouppi2017datacenter} and analog in-memory computing (AIMC) accelerators (e.g., NeuRRAM) \cite{wanneurram} also utilize this im2col transformation.
 
 \section{Analog In-memory Computing} 
+\label{section:aimc}
  
 As a general operating principle, AIMC accelerators use analog signals as intermediates to perform computations (usually dot-product computations) directly within memory arrays, avoiding the energy and latency costs of frequent data movement between compute and memory units. From a systems perspective, AIMC architectures leverage the physical properties of memory devices—such as resistive RAM (RRAM) crossbars or charge-sharing SRAM (e.g., C3SRAM)—to execute matrix-vector multiplications (MVMs) in the analog domain, forming the backbone of neural network inference. As discussed before, because DNNs are compose of MVMs and convolutions can be flattened into MVMs, AIMC accelerators are well-suited for DNN inference. 
 
